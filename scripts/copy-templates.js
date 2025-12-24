@@ -4,16 +4,25 @@ const path = require('path');
 const srcTemplates = path.join(__dirname, '..', 'src', 'templates');
 const distTemplates = path.join(__dirname, '..', 'dist', 'templates');
 
-if (!fs.existsSync(distTemplates)) {
-  fs.mkdirSync(distTemplates, { recursive: true });
+function copyRecursive(src, dest) {
+  if (!fs.existsSync(dest)) {
+    fs.mkdirSync(dest, { recursive: true });
+  }
+
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+
+    if (entry.isDirectory()) {
+      copyRecursive(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+      console.log(`Copiado: ${entry.name}`);
+    }
+  }
 }
 
-const files = fs.readdirSync(srcTemplates);
-
-files.forEach(file => {
-  const srcFile = path.join(srcTemplates, file);
-  const distFile = path.join(distTemplates, file);
-  fs.copyFileSync(srcFile, distFile);
-});
-
+copyRecursive(srcTemplates, distTemplates);
 console.log('Templates copiados exitosamente');
