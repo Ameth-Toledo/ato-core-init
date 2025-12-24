@@ -1,6 +1,6 @@
 {
   "name": "ato-core-init",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI tool and library to initialize database configuration for Node.js projects",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
