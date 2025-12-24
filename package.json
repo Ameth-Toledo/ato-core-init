@@ -1,0 +1,45 @@
+{
+  "name": "ato-core-init",
+  "version": "1.0.0",
+  "description": "CLI tool and library to initialize database configuration for Node.js projects",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "ato-core-init": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc && node scripts/copy-templates.js && node scripts/add-shebang.js",
+    "dev": "npm run build && sudo npm link",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "nodejs",
+    "database",
+    "cli",
+    "library",
+    "mysql",
+    "postgres",
+    "mongodb",
+    "setup"
+  ],
+  "author": "Ameth",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/ato-core-init.git"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
