@@ -23,6 +23,8 @@ export async function createProject(
   }
 
   createEnvFiles(database);
+  createDatabaseSchema(database);
+  createSecurityFiles(extension);
   createGitignore();
   createPackageJson(database, projectType, architecture);
   logger.success('Archivo creado: package.json');
@@ -86,6 +88,7 @@ async function createHexagonalProject(database: string, extension: string): Prom
     'src/users/application',
     'src/users/domain/entities',
     'src/users/domain/dto',
+    'src/users/domain/utils',
     'src/users/infrastructure/adapters',
     'src/users/infrastructure/controllers',
     'src/users/infrastructure/routes',
@@ -103,7 +106,8 @@ async function createHexagonalProject(database: string, extension: string): Prom
     { template: `hexagonal/User.${extension}.tpl`, output: `src/users/domain/entities/User.${extension}` },
     { template: `hexagonal/UserRequest.${extension}.tpl`, output: `src/users/domain/dto/UserRequest.${extension}` },
     { template: `hexagonal/UserResponse.${extension}.tpl`, output: `src/users/domain/dto/UserResponse.${extension}` },
-    { template: `hexagonal/IUserRepository.${extension}.tpl`, output: `src/users/domain/IUserRepository.${extension}` }
+    { template: `hexagonal/IUserRepository.${extension}.tpl`, output: `src/users/domain/IUserRepository.${extension}` },
+    { template: `hexagonal/EmailValidator.${extension}.tpl`, output: `src/users/domain/utils/EmailValidator.${extension}` }
   ];
 
   domainFiles.forEach(file => {
@@ -112,8 +116,12 @@ async function createHexagonalProject(database: string, extension: string): Prom
   });
 
   const applicationFiles = [
+    { template: `hexagonal/AuthService.${extension}.tpl`, output: `src/users/application/AuthService.${extension}` },
     { template: `hexagonal/CreateUserUseCase.${extension}.tpl`, output: `src/users/application/CreateUserUseCase.${extension}` },
-    { template: `hexagonal/GetAllUsersUseCase.${extension}.tpl`, output: `src/users/application/GetAllUsersUseCase.${extension}` }
+    { template: `hexagonal/DeleteUserUseCase.${extension}.tpl`, output: `src/users/application/DeleteUserUseCase.${extension}` },
+    { template: `hexagonal/GetAllUsersUseCase.${extension}.tpl`, output: `src/users/application/GetAllUsersUseCase.${extension}` },
+    { template: `hexagonal/GetUserByIdUseCase.${extension}.tpl`, output: `src/users/application/GetUserByIdUseCase.${extension}` },
+    { template: `hexagonal/UpdateUserUseCase.${extension}.tpl`, output: `src/users/application/UpdateUserUseCase.${extension}` }
   ];
 
   applicationFiles.forEach(file => {
@@ -131,10 +139,14 @@ async function createHexagonalProject(database: string, extension: string): Prom
 
   const infrastructureFiles = [
     { template: `hexagonal/${adapterName}Adapter.${extension}.tpl`, output: `src/users/infrastructure/adapters/${adapterName}Adapter.${extension}` },
+    { template: `hexagonal/AuthController.${extension}.tpl`, output: `src/users/infrastructure/controllers/AuthController.${extension}` },
     { template: `hexagonal/CreateUserController.${extension}.tpl`, output: `src/users/infrastructure/controllers/CreateUserController.${extension}` },
     { template: `hexagonal/GetAllUsersController.${extension}.tpl`, output: `src/users/infrastructure/controllers/GetAllUsersController.${extension}` },
+    { template: `hexagonal/GetUserByIdController.${extension}.tpl`, output: `src/users/infrastructure/controllers/GetUserByIdController.${extension}` },
+    { template: `hexagonal/UpdateUserController.${extension}.tpl`, output: `src/users/infrastructure/controllers/UpdateUserController.${extension}` },
+    { template: `hexagonal/DeleteUserController.${extension}.tpl`, output: `src/users/infrastructure/controllers/DeleteUserController.${extension}` },
     { template: `hexagonal/routes.${extension}.tpl`, output: `src/users/infrastructure/routes/routes.${extension}` },
-    { template: `hexagonal/dependencies.${extension}.tpl`, output: `src/users/infrastructure/dependencies.${extension}` }
+    { template: `hexagonal/dependencies-${database}.${extension}.tpl`, output: `src/users/infrastructure/dependencies.${extension}` } // CAMBIAR ESTA LÍNEA
   ];
 
   infrastructureFiles.forEach(file => {
@@ -160,6 +172,48 @@ function createEnvFiles(database: string): void {
     createFileFromTemplate(envTemplate, envFile);
     logger.success('Archivo creado: .env');
   }
+}
+
+function createDatabaseSchema(database: string): void {
+  if (database === 'mongo') {
+    return;
+  } 
+
+  let schemaFile: string;
+  let schemaTemplate: string;
+
+  switch (database) {
+    case 'mysql':
+      schemaFile = path.join(process.cwd(), 'schema.sql');
+      schemaTemplate = 'dbMySQL.sql.tpl';
+      break;
+    case 'postgres':
+      schemaFile = path.join(process.cwd(), 'schema.sql');
+      schemaTemplate = 'dbPostgreSQL.sql.tpl';
+      break;
+    default:
+      return;
+  }
+
+  createFileFromTemplate(schemaTemplate, schemaFile);
+  logger.success(`Archivo creado: ${path.basename(schemaFile)}`);
+}
+
+function createSecurityFiles(extension: string): void {
+  const securityFolder = path.join(process.cwd(), 'src', 'core', 'security');
+  createDirectories(securityFolder);
+
+  const securityFiles = [
+    { template: `security/auth.${extension}.tpl`, output: `src/core/security/auth.${extension}` },
+    { template: `security/hash.${extension}.tpl`, output: `src/core/security/hash.${extension}` },
+    { template: `security/jwt_middleware.${extension}.tpl`, output: `src/core/security/jwt_middleware.${extension}` },
+    { template: `security/utils.${extension}.tpl`, output: `src/core/security/utils.${extension}` }
+  ];
+
+  securityFiles.forEach(file => {
+    createFileFromTemplate(file.template, path.join(process.cwd(), file.output));
+    logger.success(`Archivo creado: ${file.output}`);
+  });
 }
 
 function createGitignore(): void {

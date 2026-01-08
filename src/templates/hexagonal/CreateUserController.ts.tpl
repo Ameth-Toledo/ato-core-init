@@ -1,24 +1,42 @@
 import { Request, Response } from 'express';
 import { CreateUserUseCase } from '../../application/CreateUserUseCase';
+import { UserRequest } from '../../domain/dto/UserRequest';
+import { UserResponse } from '../../domain/dto/UserResponse';
 
 export class CreateUserController {
   constructor(private createUserUseCase: CreateUserUseCase) {}
 
-  async handle(req: Request, res: Response): Promise<void> {
+  async execute(req: Request, res: Response): Promise<void> {
     try {
-      const { name, email } = req.body;
+      const userRequest: UserRequest = req.body;
 
-      if (!name || !email) {
-        res.status(400).json({ error: 'Name and email are required' });
+      if (!userRequest.name || !userRequest.lastname || !userRequest.email || !userRequest.password) {
+        res.status(400).json({ error: 'Campos obligatorios: name, lastname, email, password' });
         return;
       }
 
-      const user = await this.createUserUseCase.execute({ name, email });
+      const user = await this.createUserUseCase.execute(userRequest);
 
-      res.status(201).json(user);
+      const userResponse: UserResponse = {
+        id: user.id,
+        name: user.name,
+        secondname: user.secondname,
+        lastname: user.lastname,
+        secondlastname: user.secondlastname,
+        email: user.email,
+        createdAt: user.createdAt.toISOString(),
+      };
+
+      res.status(201).json({
+        message: 'Usuario creado exitosamente',
+        user: userResponse,
+      });
     } catch (error) {
-      console.error('Error creating user:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      if (error instanceof Error) {
+        res.status(400).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: 'Error interno del servidor' });
+      }
     }
   }
 }

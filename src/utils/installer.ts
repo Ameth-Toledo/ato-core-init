@@ -5,7 +5,7 @@ import { logger } from './logger';
 const execAsync = promisify(exec);
 
 export async function installDependencies(database: string, projectType: string): Promise<void> {
-  const dependencies: string[] = ['dotenv', 'express'];
+  const dependencies: string[] = ['dotenv', 'express', 'jsonwebtoken', 'bcrypt', 'cookie-parser', 'cors'];
   const devDependencies: string[] = [];
 
   switch (database) {
@@ -21,7 +21,20 @@ export async function installDependencies(database: string, projectType: string)
   }
 
   if (projectType === 'typescript') {
-    devDependencies.push('typescript', '@types/node', '@types/express', 'ts-node');
+    devDependencies.push(
+      'typescript',
+      '@types/node',
+      '@types/express',
+      '@types/jsonwebtoken',
+      '@types/bcrypt',
+      '@types/cookie-parser',
+      '@types/cors',
+      'ts-node'
+    );
+
+    if (database === 'postgres') {
+      devDependencies.push('@types/pg');
+    }
   }
 
   try {
